@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "TestAppVersionPolicy",
+    "slug": "TestAppVersionPolicy",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
