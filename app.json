@@ -2,9 +2,28 @@
   "expo": {
     "name": "TestAppVersionPolicy",
     "slug": "TestAppVersionPolicy",
-    "version": "1.0.0",
+    "version": "1.10",
     "assetBundlePatterns": [
       "**/*"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "43b26d86-8c26-4a78-a5e3-a5196776abd6"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "ios": {
+      "buildNumber": "1",
+      "bundleIdentifier": "com.douglowderexpo.TestAppVersionPolicy"
+    },
+    "android": {
+      "versionCode": 1,
+      "package": "com.douglowderexpo.TestAppVersionPolicy"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/43b26d86-8c26-4a78-a5e3-a5196776abd6"
+    }
   }
 }

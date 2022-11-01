@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "postinstall": "patch-package",
     "start": "expo start --dev-client",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -10,13 +11,17 @@
   },
   "dependencies": {
     "expo": "~47.0.0-beta.7",
+    "expo-modules-core": "~0.13.3",
     "expo-splash-screen": "~0.17.3",
     "expo-status-bar": "~1.4.1",
+    "expo-updates": "~0.15.3",
+    "expo-updates-interface": "^0.7.0",
     "react": "18.1.0",
     "react-native": "0.70.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.12.9"
+    "@babel/core": "^7.12.9",
+    "patch-package": "^6.5.0"
   },
   "private": true
 }
