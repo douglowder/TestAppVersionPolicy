@@ -1,47 +1,42 @@
 diff --git a/node_modules/expo-updates/plugin/build/withUpdates.js b/node_modules/expo-updates/plugin/build/withUpdates.js
-index 618c37f..4b548e8 100644
+index 618c37f..fdde10a 100644
 --- a/node_modules/expo-updates/plugin/build/withUpdates.js
 +++ b/node_modules/expo-updates/plugin/build/withUpdates.js
-@@ -8,6 +8,19 @@ const withUpdates = (config, props = {}) => {
+@@ -6,7 +6,15 @@ const pkg = require('expo-updates/package.json');
+ const withUpdates = (config, props = {}) => {
+     // The username will be passed from the CLI when the plugin is automatically used.
      const expoUsername = (props || {}).expoUsername ?? (0, config_1.getAccountUsername)(config);
-     config = config_plugins_1.AndroidConfig.Updates.withUpdates(config, { expoUsername });
-     config = config_plugins_1.IOSConfig.Updates.withUpdates(config, { expoUsername });
-+    let runtimeVersion;
-+    if (typeof config.runtimeVersion === 'string') {
-+        runtimeVersion = `string:${runtimeVersion}`;
+-    config = config_plugins_1.AndroidConfig.Updates.withUpdates(config, { expoUsername });
++    // Fix up Android runtime version to ensure value is parsed correctly by UpdatesConfiguration (see #13365)
++    let androidConfig;
++    if (typeof config.runtimeVersion !== 'string' && config.runtimeVersion?.policy === 'appVersion') {
++        androidConfig = { ...config, ...{ runtimeVersion: `string:${config.version}` } };
 +    }
 +    else {
-+        if (config.runtimeVersion?.policy === 'appVersion') {
-+            runtimeVersion = `string:${config.version}`;
-+        }
-+        else {
-+            runtimeVersion = config.runtimeVersion;
-+        }
++        androidConfig = config;
 +    }
-+    config.runtimeVersion = runtimeVersion;
++    config = config_plugins_1.AndroidConfig.Updates.withUpdates(androidConfig, { expoUsername });
+     config = config_plugins_1.IOSConfig.Updates.withUpdates(config, { expoUsername });
      return config;
  };
- exports.default = (0, config_plugins_1.createRunOncePlugin)(withUpdates, pkg.name, pkg.version);
 diff --git a/node_modules/expo-updates/plugin/src/withUpdates.ts b/node_modules/expo-updates/plugin/src/withUpdates.ts
-index e094cab..97e2021 100644
+index e094cab..19a8248 100644
 --- a/node_modules/expo-updates/plugin/src/withUpdates.ts
 +++ b/node_modules/expo-updates/plugin/src/withUpdates.ts
-@@ -9,6 +9,18 @@ const withUpdates: ConfigPlugin<{ expoUsername?: string } | void> = (config, pro
+@@ -7,7 +7,15 @@ const withUpdates: ConfigPlugin<{ expoUsername?: string } | void> = (config, pro
+   // The username will be passed from the CLI when the plugin is automatically used.
+   const expoUsername = (props || {}).expoUsername ?? getAccountUsername(config);
  
-   config = AndroidConfig.Updates.withUpdates(config, { expoUsername });
-   config = IOSConfig.Updates.withUpdates(config, { expoUsername });
-+  let runtimeVersion;
-+  if (typeof config.runtimeVersion === 'string') {
-+    runtimeVersion = `string:${runtimeVersion}`;
+-  config = AndroidConfig.Updates.withUpdates(config, { expoUsername });
++  // Fix up Android runtime version to ensure value is parsed correctly by UpdatesConfiguration (see #13365)
++  let androidConfig;
++  if (typeof config.runtimeVersion !== 'string' && config.runtimeVersion?.policy === 'appVersion') {
++    androidConfig = { ...config, ...{ runtimeVersion: `string:${config.version}` } };
 +  } else {
-+    if (config.runtimeVersion?.policy === 'appVersion') {
-+      runtimeVersion = `string:${config.version}`;
-+    } else {
-+      runtimeVersion = config.runtimeVersion;
-+    }
++    androidConfig = config;
 +  }
-+  config.runtimeVersion = runtimeVersion;
 +
++  config = AndroidConfig.Updates.withUpdates(androidConfig, { expoUsername });
+   config = IOSConfig.Updates.withUpdates(config, { expoUsername });
    return config;
  };
- 
