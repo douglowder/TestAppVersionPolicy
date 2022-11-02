@@ -1,42 +1,83 @@
 diff --git a/node_modules/expo-updates/plugin/build/withUpdates.js b/node_modules/expo-updates/plugin/build/withUpdates.js
-index 618c37f..fdde10a 100644
+index 618c37f..1d62545 100644
 --- a/node_modules/expo-updates/plugin/build/withUpdates.js
 +++ b/node_modules/expo-updates/plugin/build/withUpdates.js
-@@ -6,7 +6,15 @@ const pkg = require('expo-updates/package.json');
+@@ -3,10 +3,25 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ const config_1 = require("@expo/config");
+ const config_plugins_1 = require("expo/config-plugins");
+ const pkg = require('expo-updates/package.json');
++function modifyAndroidManifest(config, manifest) {
++    const { addMetaDataItemToMainApplication, getMainApplicationOrThrow, removeMetaDataItemFromMainApplication, } = config_plugins_1.AndroidConfig.Manifest;
++    // Fix up Android runtime version to ensure value is parsed correctly by UpdatesConfiguration (see #13365)
++    const app = getMainApplicationOrThrow(manifest);
++    if (typeof config.runtimeVersion !== 'string' && config.runtimeVersion?.policy === 'appVersion') {
++        removeMetaDataItemFromMainApplication(app, 'expo.modules.updates.EXPO_RUNTIME_VERSION');
++        addMetaDataItemToMainApplication(app, 'expo.modules.updates.EXPO_RUNTIME_VERSION', `string:${config.version}`);
++    }
++    return manifest;
++}
++;
  const withUpdates = (config, props = {}) => {
      // The username will be passed from the CLI when the plugin is automatically used.
      const expoUsername = (props || {}).expoUsername ?? (0, config_1.getAccountUsername)(config);
--    config = config_plugins_1.AndroidConfig.Updates.withUpdates(config, { expoUsername });
-+    // Fix up Android runtime version to ensure value is parsed correctly by UpdatesConfiguration (see #13365)
-+    let androidConfig;
-+    if (typeof config.runtimeVersion !== 'string' && config.runtimeVersion?.policy === 'appVersion') {
-+        androidConfig = { ...config, ...{ runtimeVersion: `string:${config.version}` } };
-+    }
-+    else {
-+        androidConfig = config;
-+    }
-+    config = config_plugins_1.AndroidConfig.Updates.withUpdates(androidConfig, { expoUsername });
+     config = config_plugins_1.AndroidConfig.Updates.withUpdates(config, { expoUsername });
++    config = (0, config_plugins_1.withAndroidManifest)(config, async (config) => {
++        config.modResults = modifyAndroidManifest(config, config.modResults);
++        return config;
++    });
      config = config_plugins_1.IOSConfig.Updates.withUpdates(config, { expoUsername });
      return config;
  };
 diff --git a/node_modules/expo-updates/plugin/src/withUpdates.ts b/node_modules/expo-updates/plugin/src/withUpdates.ts
-index e094cab..19a8248 100644
+index e094cab..4e94013 100644
 --- a/node_modules/expo-updates/plugin/src/withUpdates.ts
 +++ b/node_modules/expo-updates/plugin/src/withUpdates.ts
-@@ -7,7 +7,15 @@ const withUpdates: ConfigPlugin<{ expoUsername?: string } | void> = (config, pro
+@@ -1,13 +1,47 @@
+ import { getAccountUsername } from '@expo/config';
+-import { ConfigPlugin, createRunOncePlugin, AndroidConfig, IOSConfig } from 'expo/config-plugins';
++import { ExpoConfig } from '@expo/config-types';
++import {
++  ConfigPlugin,
++  createRunOncePlugin,
++  AndroidConfig,
++  IOSConfig,
++  withAndroidManifest,
++} from 'expo/config-plugins';
+ 
+ const pkg = require('expo-updates/package.json');
+ 
++function modifyAndroidManifest(
++  config: ExpoConfig,
++  manifest: AndroidConfig.Manifest.AndroidManifest
++): AndroidConfig.Manifest.AndroidManifest {
++  const {
++    addMetaDataItemToMainApplication,
++    getMainApplicationOrThrow,
++    removeMetaDataItemFromMainApplication,
++  } = AndroidConfig.Manifest;
++  // Fix up Android runtime version to ensure value is parsed correctly by UpdatesConfiguration (see #13365)
++  const app = getMainApplicationOrThrow(manifest);
++  if (typeof config.runtimeVersion !== 'string' && config.runtimeVersion?.policy === 'appVersion') {
++    removeMetaDataItemFromMainApplication(app, 'expo.modules.updates.EXPO_RUNTIME_VERSION');
++    addMetaDataItemToMainApplication(
++      app,
++      'expo.modules.updates.EXPO_RUNTIME_VERSION',
++      `string:${config.version}`
++    );
++  }
++  return manifest;
++};
++
++
+ const withUpdates: ConfigPlugin<{ expoUsername?: string } | void> = (config, props = {}) => {
    // The username will be passed from the CLI when the plugin is automatically used.
    const expoUsername = (props || {}).expoUsername ?? getAccountUsername(config);
  
--  config = AndroidConfig.Updates.withUpdates(config, { expoUsername });
-+  // Fix up Android runtime version to ensure value is parsed correctly by UpdatesConfiguration (see #13365)
-+  let androidConfig;
-+  if (typeof config.runtimeVersion !== 'string' && config.runtimeVersion?.policy === 'appVersion') {
-+    androidConfig = { ...config, ...{ runtimeVersion: `string:${config.version}` } };
-+  } else {
-+    androidConfig = config;
-+  }
-+
-+  config = AndroidConfig.Updates.withUpdates(androidConfig, { expoUsername });
+   config = AndroidConfig.Updates.withUpdates(config, { expoUsername });
++  config = withAndroidManifest(config, async (config) => {
++    config.modResults = modifyAndroidManifest(config, config.modResults);
++    return config;
++  });
    config = IOSConfig.Updates.withUpdates(config, { expoUsername });
    return config;
  };
