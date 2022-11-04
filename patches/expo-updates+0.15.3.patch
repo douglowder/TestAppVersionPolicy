@@ -1,0 +1,14 @@
+diff --git a/node_modules/expo-updates/android/build.gradle b/node_modules/expo-updates/android/build.gradle
+index 377c7a4..1d1280f 100644
+--- a/node_modules/expo-updates/android/build.gradle
++++ b/node_modules/expo-updates/android/build.gradle
+@@ -6,8 +6,7 @@ apply plugin: 'maven-publish'
+ group = 'host.exp.exponent'
+ version = '0.15.3'
+ 
+-def ex_updates_native_debug_env = System.getenv("EX_UPDATES_NATIVE_DEBUG") ?: "0"
+-def ex_updates_native_debug = ex_updates_native_debug_env == "1" ? "true" : "false"
++def ex_updates_native_debug = "true"
+ 
+ // For native updates debugging, override these properties
+ if (findProject(":app")) {
